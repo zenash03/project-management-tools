@@ -6,10 +6,95 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../app/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  workspaces WorkspaceMember[]
+  assignedIssues Issue[] @relation("AssignedTo")
+  createdAt DateTime @default(now())
+}
+
+model Workspace {
+  id          String            @id @default(cuid())
+  name        String
+  projects    Project[]
+  members     WorkspaceMember[]
+  createdAt   DateTime          @default(now())
+}
+
+model WorkspaceMember {
+  id          String     @id @default(cuid())
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id])
+  workspaceId String
+  role        String     // "admin", "member", etc.
+  createdAt   DateTime   @default(now())
+
+  @@unique([userId, workspaceId])
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  workspaceId String
+  board       Board?
+  issues      Issue[]
+  createdAt   DateTime  @default(now())
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  project     Project  @relation(fields: [projectId], references: [id])
+  projectId   String   @unique
+  columns     BoardColumn[]
+  createdAt   DateTime @default(now())
+}
+
+model BoardColumn {
+  id        String   @id @default(cuid())
+  name      String
+  order     Int
+  board     Board    @relation(fields: [boardId], references: [id])
+  boardId   String
+  issues    Issue[]
+  createdAt DateTime @default(now())
+}
+
+model Issue {
+  id            String        @id @default(cuid())
+  title         String
+  description   String?
+  type          IssueType     // "TASK", "BUG", "STORY", "EPIC", "SUBTASK"
+  status        String        // optional if you're using BoardColumn to represent status
+  project       Project       @relation(fields: [projectId], references: [id])
+  projectId     String
+  column        BoardColumn?  @relation(fields: [columnId], references: [id])
+  columnId      String?
+  assignee      User?         @relation("AssignedTo", fields: [assigneeId], references: [id])
+  assigneeId    String?
+  parent        Issue?        @relation("SubTasks", fields: [parentId], references: [id])
+  parentId      String?
+  subtasks      Issue[]       @relation("SubTasks")
+  createdAt     DateTime      @default(now())
+}
+
+enum IssueType {
+  TASK
+  BUG
+  STORY
+  EPIC
+  SUBTASK
 }
