@@ -14,7 +14,6 @@ export function BoardColumn({
 }) {
   return (
     <div className="w-72 flex flex-col bg-muted/40 rounded-xl shadow-sm p-3">
-      {/* Column Header */}
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-gray-800">
           {title} <span className="text-gray-500">({tasks.length})</span>
@@ -23,8 +22,7 @@ export function BoardColumn({
           <Plus className="w-4 h-4" />
         </Button>
       </div>
-
-      {/* Task List */}
+      
       <ScrollArea className="h-[500px]">
         <div className="flex flex-col gap-y-2">
             {tasks.length > 0 ? (
